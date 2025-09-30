@@ -41,3 +41,73 @@
     <!-- built files will be auto injected -->
   </body>
 </html>
+<template>
+  <div style="padding: 1rem; max-width: 600px; margin: auto;">
+    <h2>Generate Predefined Message</h2>
+    <form @submit.prevent="generateMessage">
+      <input
+        v-model="prompt"
+        placeholder="Enter prompt e.g. Diwali greetings"
+        required
+        style="width: 100%; padding: 0.5rem; margin-bottom: 1rem;"
+      />
+      <button type="submit" style="padding: 0.5rem 1rem;">Generate</button>
+    </form>
+    <div v-if="loading">Generating message...</div>
+    <div v-if="message" style="margin-top: 1rem;">
+      <h3>Generated Message:</h3>
+      <textarea
+        v-model="message"
+        rows="6"
+        style="width: 100%; padding: 0.5rem;"
+      ></textarea>
+    </div>
+    <div v-if="error" style="color: red; margin-top: 1rem;">
+      {{ error }}
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      prompt: '',
+      message: '',
+      loading: false,
+      error: ''
+    }
+  },
+  methods: {
+    async generateMessage() {
+      this.error = ''
+      this.message = ''
+      this.loading = true
+      try {
+        const response = await fetch('http://localhost:8000/generate-message/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: this.prompt })
+        })
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}`)
+        }
+        const data = await response.json()
+        if (data.error) {
+          this.error = data.error
+        } else {
+          this.message = data.message || ''
+        }
+      } catch (err) {
+        this.error = err.message || 'Network error'
+      } finally {
+        this.loading = false
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+/* Add styles here if needed */
+</style>
